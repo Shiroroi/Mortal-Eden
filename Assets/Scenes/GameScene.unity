@@ -174,7 +174,7 @@ Transform:
   - {fileID: 1842977263}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 45, z: 0}
---- !u!43 &980439640
+--- !u!43 &1265946299
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -444,7 +444,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1291865948}
-  m_Mesh: {fileID: 980439640}
+  m_Mesh: {fileID: 1265946299}
 --- !u!4 &1291865952
 Transform:
   m_ObjectHideFlags: 0
@@ -678,13 +678,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac88905979cd2084180a1aa538e4b452, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HexGridLayout
-  gridSize: {x: 10, y: 10}
+  gridSize: {x: 35, y: 30}
   generateAtStart: 1
   outerSize: 1
-  innerSize: 0.8
+  innerSize: 0
   height: 1
-  isFlatTopped: 0
+  isFlatTopped: 1
   material: {fileID: 2100000, guid: 6cfc95ad8c4d304459806d5dcd41aedd, type: 2}
+  tileTypes:
+  - name: Plains
+    minHeight: 3
+    maxHeight: 6
+    material: {fileID: 2100000, guid: 83417f5b03e2dcb4588d1b6396a20e1a, type: 2}
+    spawnWeight: 0.4
+  - name: Forest
+    minHeight: 3
+    maxHeight: 6
+    material: {fileID: 2100000, guid: 6cfc95ad8c4d304459806d5dcd41aedd, type: 2}
+    spawnWeight: 0.25
+  - name: Mountains
+    minHeight: 20
+    maxHeight: 30
+    material: {fileID: 2100000, guid: 60e9ea6234767a748a0bef7f5467a3b8, type: 2}
+    spawnWeight: 0.2
+  - name: River
+    minHeight: 1
+    maxHeight: 1
+    material: {fileID: 2100000, guid: 2338fa19e183d344b878a1b9153eca06, type: 2}
+    spawnWeight: 0.1
+  - name: Alien Base
+    minHeight: 5
+    maxHeight: 5
+    material: {fileID: 2100000, guid: 03c7ee110e0f0dc448c3a11b29003405, type: 2}
+    spawnWeight: 0.05
 --- !u!4 &1979983998
 Transform:
   m_ObjectHideFlags: 0
