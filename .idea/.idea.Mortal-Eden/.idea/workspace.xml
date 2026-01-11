@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="464419ec-3cd1-4ebe-91a8-cb93bbaf604c" name="Changes" comment="" />
+    <list default="true" id="464419ec-3cd1-4ebe-91a8-cb93bbaf604c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/HexGridLayout.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/HexGridLayout.cs" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
