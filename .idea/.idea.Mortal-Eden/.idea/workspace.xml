@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="464419ec-3cd1-4ebe-91a8-cb93bbaf604c" name="Changes" comment="" />
+    <list default="true" id="464419ec-3cd1-4ebe-91a8-cb93bbaf604c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.plastic/plastic.changes" beforeDir="false" afterPath="$PROJECT_DIR$/.plastic/plastic.changes" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.plastic/plastic.wktree" beforeDir="false" afterPath="$PROJECT_DIR$/.plastic/plastic.wktree" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/HexGridLayout.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/HexGridLayout.cs" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -12,6 +16,9 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/Assets/HexTileType.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8

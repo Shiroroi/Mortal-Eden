@@ -13,6 +13,10 @@ public class HexGridLayout : MonoBehaviour
     public float height = 1f;
     public bool isFlatTopped = true;
     public Material material;
+    
+    [Header("Tile Types")]
+    public HexTileType[] tileTypes;
+
 
     // -------------------- UNITY --------------------
 
@@ -59,17 +63,22 @@ public class HexGridLayout : MonoBehaviour
                 tile.transform.SetParent(transform, false);
                 tile.transform.localPosition = GetHexPosition(x, y);
 
+                HexTileType type = PickTileType();
+
+                float tileHeight = Random.Range(type.minHeight, type.maxHeight);
+
                 HexRenderer hex = tile.AddComponent<HexRenderer>();
                 hex.outerSize = outerSize;
                 hex.innerSize = innerSize;
-                hex.height = height;
+                hex.height = tileHeight;
                 hex.isFlatTopped = isFlatTopped;
-                hex.material = material;
+                hex.material = type.material;
 
                 hex.DrawMesh();
             }
         }
     }
+
 
     // -------------------- POSITIONING --------------------
 
@@ -110,4 +119,22 @@ public class HexGridLayout : MonoBehaviour
             );
         }
     }
+    HexTileType PickTileType()
+    {
+        float total = 0f;
+        foreach (var t in tileTypes)
+            total += t.spawnWeight;
+
+        float roll = Random.value * total;
+
+        foreach (var t in tileTypes)
+        {
+            roll -= t.spawnWeight;
+            if (roll <= 0f)
+                return t;
+        }
+
+        return tileTypes[0];
+    }
+
 }
