@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
-
+using System.Linq;
 [ExecuteAlways]
 public class HexGridLayout : MonoBehaviour
 {
@@ -306,29 +306,72 @@ public class HexGridLayout : MonoBehaviour
         }
     }
 
-    void BuildGrid()
+    public void BuildGrid()
+{
+    ClearGrid();
+    GenerateTileMap();
+
+    // 1. Group tiles by their material
+    Dictionary<Material, List<CombineInstance>> materialBatches = new Dictionary<Material, List<CombineInstance>>();
+
+    for (int y = 0; y < gridSize.y; y++)
     {
-        for (int y = 0; y < gridSize.y; y++)
+        for (int x = 0; x < gridSize.x; x++)
         {
-            for (int x = 0; x < gridSize.x; x++)
-            {
-                GameObject tile = new($"Hex {x},{y}");
-                tile.transform.SetParent(transform, false);
-                tile.transform.localPosition = GetHexPosition(x, y);
+            HexTileType type = tileMap[x, y];
+            Vector3 pos = GetHexPosition(x, y);
 
-                HexTileType type = tileMap[x, y];
-                float tileHeight = Random.Range(type.minHeight, type.maxHeight);
+            // Create a temporary mesh for this one tile
+            Mesh tileMesh = CreateTileMesh(type, x, y);
 
-                HexRenderer hex = tile.AddComponent<HexRenderer>();
-                hex.outerSize = outerSize;
-                hex.innerSize = innerSize;
-                hex.height = tileHeight;
-                hex.isFlatTopped = isFlatTopped;
-                hex.material = type.material;
+            CombineInstance combine = new CombineInstance();
+            combine.mesh = tileMesh;
+            combine.transform = Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one);
 
-                hex.DrawMesh();
-            }
+            if (!materialBatches.ContainsKey(type.material))
+                materialBatches[type.material] = new List<CombineInstance>();
+
+            materialBatches[type.material].Add(combine);
         }
+    }
+
+    // 2. Combine all meshes of the same material into one single object
+    foreach (var batch in materialBatches)
+    {
+        GameObject cluster = new GameObject("MaterialBatch_" + batch.Key.name);
+        cluster.transform.SetParent(this.transform, false);
+        
+        MeshFilter mf = cluster.AddComponent<MeshFilter>();
+        MeshRenderer mr = cluster.AddComponent<MeshRenderer>();
+        
+        Mesh combinedMesh = new Mesh();
+        combinedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32; // Allows > 65k vertices
+        combinedMesh.CombineMeshes(batch.Value.ToArray(), true, true);
+        
+        mf.sharedMesh = combinedMesh;
+        mr.sharedMaterial = batch.Key;
+    }
+}
+
+// Helper to generate a single hex mesh data
+    Mesh CreateTileMesh(HexTileType type, int x, int y) 
+    {
+        GameObject tempGo = new GameObject("TempHex");
+        HexRenderer renderer = tempGo.AddComponent<HexRenderer>();
+    
+        // Set the settings
+        renderer.outerSize = outerSize;
+        renderer.innerSize = innerSize;
+        // Use the type settings for height variation
+        renderer.height = Random.Range(type.minHeight, type.maxHeight); 
+        renderer.isFlatTopped = isFlatTopped;
+    
+        // Get the mesh directly
+        Mesh m = renderer.GetGeneratedMesh();
+    
+        // Clean up the temporary object immediately
+        DestroyImmediate(tempGo);
+        return m;
     }
 
 

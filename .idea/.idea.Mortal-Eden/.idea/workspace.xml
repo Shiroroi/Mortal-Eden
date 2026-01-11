@@ -5,7 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="464419ec-3cd1-4ebe-91a8-cb93bbaf604c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.plastic/plastic.changes" beforeDir="false" afterPath="$PROJECT_DIR$/.plastic/plastic.changes" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.plastic/plastic.wktree" beforeDir="false" afterPath="$PROJECT_DIR$/.plastic/plastic.wktree" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/HexGridLayout.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/HexGridLayout.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/HexRenderer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/HexRenderer.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,6 +108,7 @@
       <updated>1767938981397</updated>
       <workItem from="1767938982489" duration="5979000" />
       <workItem from="1768035179418" duration="801000" />
+      <workItem from="1768142595930" duration="317000" />
     </task>
     <servers />
   </component>

@@ -174,7 +174,7 @@ Transform:
   - {fileID: 1842977263}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 45, z: 0}
---- !u!43 &984679263
+--- !u!43 &426716498
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -444,7 +444,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1291865948}
-  m_Mesh: {fileID: 984679263}
+  m_Mesh: {fileID: 426716498}
 --- !u!4 &1291865952
 Transform:
   m_ObjectHideFlags: 0
@@ -678,7 +678,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac88905979cd2084180a1aa538e4b452, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HexGridLayout
-  gridSize: {x: 45, y: 50}
+  gridSize: {x: 60, y: 65}
   generateAtStart: 1
   outerSize: 1
   innerSize: 0

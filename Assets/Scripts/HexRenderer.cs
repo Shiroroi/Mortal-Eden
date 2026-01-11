@@ -34,32 +34,7 @@ public class HexRenderer : MonoBehaviour
 
     private List<Face> m_faces;
 
-    private void Awake()
-    {
-        Init();
-        DrawMesh();
-    }
-   
-    // debug only
-    void Update()
-    {
-        if (!Application.isPlaying) return;
-
-        DrawMesh();
-    }
-
-
-    private void OnEnable()
-    {
-        Init();
-        DrawMesh();
-    }
-
-    private void OnValidate()
-    {
-        Init();
-        DrawMesh();
-    }
+    
 
     private void Init()
     {
@@ -91,8 +66,16 @@ public class HexRenderer : MonoBehaviour
         CombineFaces();
     }
 
-
-    private void DrawFaces()
+// Add this to HexRenderer.cs
+    public Mesh GetGeneratedMesh()
+    {
+        // Ensure components exist even if not placed in scene
+        m_mesh = new Mesh { name = "HexData" };
+        DrawFaces();
+        CombineFaces();
+        return m_mesh;
+    }
+    public void DrawFaces()
     {
         m_faces = new List<Face>();
 
