@@ -24,6 +24,10 @@ public class HexGridLayout : MonoBehaviour
     [Range(0f, 0.3f)]
     public float lakeChance = 0.1f;
 
+    [Header("Player Spawn")]
+    public GameObject settlerPrefab;
+    public int minDistanceFromAlienBase = 5;
+
     private HexTileType[,] tileMap;
 
     // Tile type indices (set these in inspector or find by name)
@@ -51,6 +55,7 @@ public class HexGridLayout : MonoBehaviour
         ClearGrid();
         GenerateTileMap();
         BuildGrid();
+        SpawnPlayer();
     }
 
     // -------------------- GRID --------------------
@@ -307,53 +312,56 @@ public class HexGridLayout : MonoBehaviour
     }
 
     public void BuildGrid()
-{
-    ClearGrid();
-    GenerateTileMap();
-
-    // 1. Group tiles by their material
-    Dictionary<Material, List<CombineInstance>> materialBatches = new Dictionary<Material, List<CombineInstance>>();
-
-    for (int y = 0; y < gridSize.y; y++)
     {
-        for (int x = 0; x < gridSize.x; x++)
+        ClearGrid();
+        GenerateTileMap();
+
+        // 1. Group tiles by their material
+        Dictionary<Material, List<CombineInstance>> materialBatches = new Dictionary<Material, List<CombineInstance>>();
+
+        for (int y = 0; y < gridSize.y; y++)
         {
-            HexTileType type = tileMap[x, y];
-            Vector3 pos = GetHexPosition(x, y);
+            for (int x = 0; x < gridSize.x; x++)
+            {
+                HexTileType type = tileMap[x, y];
+                Vector3 pos = GetHexPosition(x, y);
 
-            // Create a temporary mesh for this one tile
-            Mesh tileMesh = CreateTileMesh(type, x, y);
+                // Create a temporary mesh for this one tile
+                Mesh tileMesh = CreateTileMesh(type, x, y);
 
-            CombineInstance combine = new CombineInstance();
-            combine.mesh = tileMesh;
-            combine.transform = Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one);
+                CombineInstance combine = new CombineInstance();
+                combine.mesh = tileMesh;
+                combine.transform = Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one);
 
-            if (!materialBatches.ContainsKey(type.material))
-                materialBatches[type.material] = new List<CombineInstance>();
+                if (!materialBatches.ContainsKey(type.material))
+                    materialBatches[type.material] = new List<CombineInstance>();
 
-            materialBatches[type.material].Add(combine);
+                materialBatches[type.material].Add(combine);
+            }
+        }
+
+        // 2. Combine all meshes of the same material into one single object
+        foreach (var batch in materialBatches)
+        {
+            GameObject cluster = new GameObject("MaterialBatch_" + batch.Key.name);
+            cluster.transform.SetParent(this.transform, false);
+            cluster.layer = LayerMask.NameToLayer("Hex"); // Set layer for raycasting
+            
+            MeshFilter mf = cluster.AddComponent<MeshFilter>();
+            MeshRenderer mr = cluster.AddComponent<MeshRenderer>();
+            MeshCollider mc = cluster.AddComponent<MeshCollider>(); // Add collider for clicking
+            
+            Mesh combinedMesh = new Mesh();
+            combinedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32; // Allows > 65k vertices
+            combinedMesh.CombineMeshes(batch.Value.ToArray(), true, true);
+            
+            mf.sharedMesh = combinedMesh;
+            mr.sharedMaterial = batch.Key;
+            mc.sharedMesh = combinedMesh; // Assign mesh to collider
         }
     }
 
-    // 2. Combine all meshes of the same material into one single object
-    foreach (var batch in materialBatches)
-    {
-        GameObject cluster = new GameObject("MaterialBatch_" + batch.Key.name);
-        cluster.transform.SetParent(this.transform, false);
-        
-        MeshFilter mf = cluster.AddComponent<MeshFilter>();
-        MeshRenderer mr = cluster.AddComponent<MeshRenderer>();
-        
-        Mesh combinedMesh = new Mesh();
-        combinedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32; // Allows > 65k vertices
-        combinedMesh.CombineMeshes(batch.Value.ToArray(), true, true);
-        
-        mf.sharedMesh = combinedMesh;
-        mr.sharedMaterial = batch.Key;
-    }
-}
-
-// Helper to generate a single hex mesh data
+    // Helper to generate a single hex mesh data
     Mesh CreateTileMesh(HexTileType type, int x, int y) 
     {
         GameObject tempGo = new GameObject("TempHex");
@@ -437,7 +445,7 @@ public class HexGridLayout : MonoBehaviour
 
     // -------------------- POSITIONING --------------------
 
-    Vector3 GetHexPosition(int x, int y)
+    public Vector3 GetHexPosition(int x, int y)
     {
         float size = outerSize;
 
@@ -473,5 +481,177 @@ public class HexGridLayout : MonoBehaviour
                 -(y * vert)
             );
         }
+    }
+
+    // -------------------- PLAYER SPAWNING --------------------
+
+    void SpawnPlayer()
+    {
+        if (!Application.isPlaying) return; // Don't spawn in editor mode
+        
+        if (settlerPrefab == null)
+        {
+            Debug.LogWarning("No Settler Prefab assigned to HexGridLayout!");
+            return;
+        }
+
+        Vector2Int spawnPos = FindValidSpawnPosition();
+        
+        if (spawnPos.x == -1)
+        {
+            Debug.LogError("Could not find valid spawn position for player!");
+            return;
+        }
+
+        // Double-check the tile at spawn position
+        HexTileType spawnTile = GetTileAt(spawnPos);
+        Debug.Log($"Spawning on tile: {spawnTile.name} at position {spawnPos}");
+
+        // Spawn the settler with world position offset from HexGridLayout's position
+        Vector3 localHexPos = GetHexPosition(spawnPos.x, spawnPos.y);
+        Vector3 worldPos = transform.position + localHexPos + Vector3.up * 0.5f;
+        GameObject settlerObj = Instantiate(settlerPrefab, worldPos, Quaternion.identity);
+        
+        Settler settler = settlerObj.GetComponent<Settler>();
+        if (settler != null)
+        {
+            settler.gridPosition = spawnPos;
+            settler.hexGrid = this;
+        }
+
+        Debug.Log($"Player spawned at grid {spawnPos}, world pos {worldPos} (Plains tile, {GetDistanceToNearestAlienBase(spawnPos)} tiles from alien base)");
+    }
+
+    Vector2Int FindValidSpawnPosition()
+    {
+        // Find all alien base positions first
+        List<Vector2Int> alienBasePositions = new List<Vector2Int>();
+        for (int y = 0; y < gridSize.y; y++)
+        {
+            for (int x = 0; x < gridSize.x; x++)
+            {
+                if (tileMap[x, y].name == ALIEN_BASE)
+                {
+                    alienBasePositions.Add(new Vector2Int(x, y));
+                }
+            }
+        }
+
+        // Find all valid plains tiles (NOT river, NOT forest, NOT mountain, NOT alien base)
+        List<Vector2Int> validSpawns = new List<Vector2Int>();
+        for (int y = 0; y < gridSize.y; y++)
+        {
+            for (int x = 0; x < gridSize.x; x++)
+            {
+                // Only spawn on actual plains tiles
+                if (tileMap[x, y].name == PLAINS)
+                {
+                    Vector2Int pos = new Vector2Int(x, y);
+                    
+                    // Check distance to all alien bases
+                    bool farEnough = true;
+                    foreach (Vector2Int alienPos in alienBasePositions)
+                    {
+                        int distance = GetHexDistance(pos, alienPos);
+                        if (distance < minDistanceFromAlienBase)
+                        {
+                            farEnough = false;
+                            break;
+                        }
+                    }
+
+                    if (farEnough)
+                    {
+                        validSpawns.Add(pos);
+                    }
+                }
+            }
+        }
+
+        if (validSpawns.Count == 0)
+        {
+            Debug.LogWarning($"No valid spawn positions found! Searched for '{PLAINS}' tiles. Try reducing minDistanceFromAlienBase or check your tile type names.");
+            
+            // Debug: Print what tiles we actually have
+            Dictionary<string, int> tileCounts = new Dictionary<string, int>();
+            for (int y = 0; y < gridSize.y; y++)
+            {
+                for (int x = 0; x < gridSize.x; x++)
+                {
+                    string name = tileMap[x, y].name;
+                    if (!tileCounts.ContainsKey(name))
+                        tileCounts[name] = 0;
+                    tileCounts[name]++;
+                }
+            }
+            Debug.Log("Tile distribution: " + string.Join(", ", tileCounts));
+            
+            return new Vector2Int(-1, -1);
+        }
+
+        // Pick random valid spawn
+        return validSpawns[Random.Range(0, validSpawns.Count)];
+    }
+
+    int GetHexDistance(Vector2Int a, Vector2Int b)
+    {
+        // Convert to cube coordinates for hex distance
+        Vector3Int cubeA = OffsetToCube(a);
+        Vector3Int cubeB = OffsetToCube(b);
+        
+        return (Mathf.Abs(cubeA.x - cubeB.x) + Mathf.Abs(cubeA.y - cubeB.y) + Mathf.Abs(cubeA.z - cubeB.z)) / 2;
+    }
+
+    Vector3Int OffsetToCube(Vector2Int offset)
+    {
+        int x, y, z;
+        
+        if (isFlatTopped)
+        {
+            x = offset.x - (offset.y - (offset.y & 1)) / 2;
+            z = offset.y;
+            y = -x - z;
+        }
+        else
+        {
+            x = offset.x;
+            z = offset.y - (offset.x - (offset.x & 1)) / 2;
+            y = -x - z;
+        }
+        
+        return new Vector3Int(x, y, z);
+    }
+
+    int GetDistanceToNearestAlienBase(Vector2Int pos)
+    {
+        int minDist = int.MaxValue;
+        
+        for (int y = 0; y < gridSize.y; y++)
+        {
+            for (int x = 0; x < gridSize.x; x++)
+            {
+                if (tileMap[x, y].name == ALIEN_BASE)
+                {
+                    int dist = GetHexDistance(pos, new Vector2Int(x, y));
+                    minDist = Mathf.Min(minDist, dist);
+                }
+            }
+        }
+        
+        return minDist;
+    }
+
+    // Helper to get tile type at position (useful for other systems)
+    public HexTileType GetTileAt(int x, int y)
+    {
+        if (x < 0 || x >= gridSize.x || y < 0 || y >= gridSize.y)
+            return null;
+            
+        return tileMap[x, y];
+    }
+
+    public HexTileType GetTileAt(Vector2Int pos)
+    {
+        return GetTileAt(pos.x, pos.y);
     }
 }
